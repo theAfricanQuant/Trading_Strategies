@@ -186,9 +186,7 @@ def cost_function1(theta, *args ):
 
     Ft, dFt = update_Ft(Xn, theta)
     Ret, sharpe, A, B, D = reward_function(X, Ft, miu, delta)
-    J = D[-1]*-1
-#     print "J={j}".format(j=J)
-    return J
+    return D[-1]*-1
 
 def update_Ft(Xn, theta) :
     '''
@@ -224,11 +222,10 @@ def update_Ft(Xn, theta) :
 
 
 
-def feature_normalization(X) :
+def feature_normalization(X):
     mu = mean(X)
     sigma = std(X, ddof=1)
-    Xn = (X - mu) / sigma
-    return Xn
+    return (X - mu) / sigma
 
 def reward_function1(X, Ft,  miu, delta):
     '''

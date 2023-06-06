@@ -45,14 +45,11 @@ class TestNN(AAA) :
     Using the last N days price directions as the features
     Target using the next day price direction
     '''
-    def create_features(self, df, n = 5) :
+    def create_features(self, df, n = 5):
         df_target = target_direction(df, 1)
         df_target.columns = ['target']
 
-        list_df_features = []
-        for i in xrange(n):
-            list_df_features.append(direction(df, i+1))
-
+        list_df_features = [direction(df, i+1) for i in xrange(n)]
         df_features = pd.DataFrame()
         for l in list_df_features:
             df_features = df_features.join(l, how='outer')
@@ -174,13 +171,9 @@ class MLStrategy :
         return dp
 
 
-    def load_data(self, tickers) :
+    def load_data(self, tickers):
         dp = self.getData(tickers)
-        dfs = {}
-
-        for ticker in tickers:
-            dfs[ticker] = dp[ticker]
-        return dfs
+        return {ticker: dp[ticker] for ticker in tickers}
 
     def create_features(self, df):
         pass
@@ -276,8 +269,7 @@ def cost_function1(theta, *args ):
 
     Ft, dFt = update_Ft(Xn, theta)
     Ret, sharpe, D = reward_function(X, Ft, miu, delta)
-    J = sharpe * -1
-    return J
+    return sharpe * -1
 
 def update_Ft(Xn, theta) :
     '''
@@ -303,11 +295,10 @@ def update_Ft(Xn, theta) :
 
 
 
-def feature_normalization(X) :
+def feature_normalization(X):
     mu = mean(X)
     sigma = std(X)
-    Xn = (X - mu) / sigma
-    return Xn
+    return (X - mu) / sigma
 
 def reward_function(X, Ft,  miu, delta):
     '''

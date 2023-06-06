@@ -99,8 +99,12 @@ class Settings :
         return self._mysql_metadata
 
     def get_mysql_table(self, table_name):
-        table = Table(table_name, self.get_mysql_metadata(), autoload=True, autoload_with=self.get_mysql_engine() )
-        return table
+        return Table(
+            table_name,
+            self.get_mysql_metadata(),
+            autoload=True,
+            autoload_with=self.get_mysql_engine(),
+        )
 
     ### functions to get local mongo collections
     def get_mongo_coll_job(self):
@@ -134,14 +138,11 @@ class Settings :
 
     def get_mongo_coll(self, name_coll, local=True):
         mongo_db = self.get_mongo_db(local)
-        mongo_coll = mongo_db[name_coll]
-
-        return mongo_coll
+        return mongo_db[name_coll]
 
     def get_mongo_coll(self, name_coll, name_db, local=True):
         mongo_db = self.get_mongo_db(name_db, local)
-        mongo_coll = mongo_db[name_coll]
-        return mongo_coll
+        return mongo_db[name_coll]
 
 
 
@@ -514,8 +515,7 @@ class JobManager :
 
     def get_all_stock_info(self):
         mongo_coll = self._settings.get_mongo_coll_info()
-        df_stock_info = pd.DataFrame(list(mongo_coll.find()))
-        return df_stock_info
+        return pd.DataFrame(list(mongo_coll.find()))
 
     # download_and_store_stock_info()
     def add_download_jobs(self, start, end=None):
@@ -567,7 +567,7 @@ class JobManager :
         jobs = pd.DataFrame()
 
         if end is None:
-            end = datetime.today().strftime('%Y%m%d')
+            end = datetime.now().strftime('%Y%m%d')
 
         if start is None:
             jobs['tradeDate'] = {end}
@@ -589,7 +589,7 @@ class JobManager :
         jobs = pd.DataFrame()
 
         if end is None:
-            end = datetime.today().strftime('%Y%m%d')
+            end = datetime.now().strftime('%Y%m%d')
 
         if start is None:
             jobs['tradeDate'] = {end}

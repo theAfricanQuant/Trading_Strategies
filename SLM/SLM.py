@@ -17,27 +17,21 @@ import tushare as ts
 
 # In[41]:
 #### function: get Patterns with specified nr of days lookingback
-def get_patterns(n, ret) :
+def get_patterns(n, ret):
     signals = pd.DataFrame()
     scores = [];
-    for i in range(n) :
+    for i in range(n):
         signals[i] = (ret.shift(n-i-1) > 0) * 1
-        if (i == 0) :
-            scores = signals[i];
-        else :
-            scores = scores + signals[i] * pow(2, i);
+        scores = signals[i] if (i == 0) else scores + signals[i] * pow(2, i)
     return scores;
 
-def get_patterns1(n, ret) :
+def get_patterns1(n, ret):
     signals = pd.DataFrame();
     scores = [];
-    for i in range(0, n) :
+    for i in range(0, n):
         signals[i] = 2*(ret.shift(n - i-1) > 0.0075)
         signals[i] = signals[i] + 1*((ret.shift(n - i - 1) > -0.0075) & (signals[i] != 2))
-        if (i == 0) :
-            scores = signals[i];
-        else :
-            scores = scores + signals[i] * pow(3, i);
+        scores = signals[i] if (i == 0) else scores + signals[i] * pow(3, i)
     return scores;
 
 

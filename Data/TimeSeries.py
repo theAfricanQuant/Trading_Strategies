@@ -32,9 +32,9 @@ class TimeSeries :
             end = str(datetime.date.today())
 
         query = select([tl_price]). \
-            where(tl_price.c.code.in_(codes)).  \
-            where(tl_price.c.date >= start). \
-            where(tl_price.c.date <= end)
+                where(tl_price.c.code.in_(codes)).  \
+                where(tl_price.c.date >= start). \
+                where(tl_price.c.date <= end)
         data = pd.read_sql(query, self._settings.get_mysql_engine())
         data.set_index('date', inplace=True)
 
@@ -43,7 +43,7 @@ class TimeSeries :
         ### reorder the dataframe
         ### using a dict as a container. Each field will be a separate dataframe stored in the dict.
         ### the key will be the field name
-        di_data = dict()
+        di_data = {}
         for field in fields :
             df_field = pd.DataFrame()
             for code in codes:

@@ -8,18 +8,16 @@ from numpy import *
 
 
 
-def next_day_log_ratio(df) :
+def next_day_log_ratio(df):
     v = 25000 * np.log(df['open'].shift(-2) / df['open'].shift(-1))
-    ndlr = pd.DataFrame(data=np.array(v), index=df.index, columns=['ndlr'])
-    return ndlr
+    return pd.DataFrame(data=np.array(v), index=df.index, columns=['ndlr'])
 
 def next_day_atr_return_distance(df, win=250):
     delta_o = np.array(df['open'].shift(-2) - df['open'].shift(-1))
     atr = ta.ATR(df['high'].values, df['low'].values, df['close'].values, 250)
     v = delta_o / atr
 
-    ndard = pd.DataFrame(data=v, index=df.index, columns=['ndard'])
-    return ndard
+    return pd.DataFrame(data=v, index=df.index, columns=['ndard'])
 
 
 # 1-day log return
@@ -355,15 +353,12 @@ class CycleIndicator():
         return mmi_de
 
     @staticmethod
-    def Hurst(data, period = 100) :
+    def Hurst(data, period = 100):
         from numpy import cumsum, log, polyfit, sqrt, std, subtract
         def hurst(ts):
             """Returns the Hurst Exponent of the time series vector ts"""
             # Create the range of lag values
-            if 50 <= len(ts)  :
-                n = 50
-            else:
-                n = len(ts)
+            n = 50 if 50 <= len(ts) else len(ts)
             lags = range(2, 100)
 
             # Calculate the array of the variances of the lagged differences
@@ -374,6 +369,7 @@ class CycleIndicator():
 
             # Return the Hurst exponent from the polyfit output
             return poly[0]*2.0
+
 
 
 
@@ -406,7 +402,7 @@ class TrendIndicators():
 
 
     @staticmethod
-    def DecyclerOsc(data, HPPeriod1=30, HPPeriod2 = 60) :
+    def DecyclerOsc(data, HPPeriod1=30, HPPeriod2 = 60):
         nr = len(data)
         # Close = df[['close']].values
 
@@ -419,17 +415,11 @@ class TrendIndicators():
         for i in range(nr):
             if i < 2:
                 continue
-            else :
-                HP1[i] = (1 - alpha1/2) * (1-alpha1/2)* (data[i] - 2 * data[i - 1] + data[i - 2]) + \
+            HP1[i] = (1 - alpha1/2) * (1-alpha1/2)* (data[i] - 2 * data[i - 1] + data[i - 2]) + \
                         2*(1 - alpha1) * HP1[i-1] - (1 - alpha1) * (1 - alpha1) * HP1[i-2]
-                HP2[i] = (1 - alpha2/2) * (1-alpha2/2)* (data[i] - 2 * data[i - 1] + data[i - 2]) + \
+            HP2[i] = (1 - alpha2/2) * (1-alpha2/2)* (data[i] - 2 * data[i - 1] + data[i - 2]) + \
                         2*(1 - alpha2) * HP2[i-1] - (1 - alpha2) * (1 - alpha2) * HP2[i-2]
-        Decycle = HP2 - HP1
-        # df_decycle = pd.DataFrame(data = Decycle, index=df.index, columns=['decycle_osc'])
-        # df_decycle['decycle_hp1'] = HP1
-        # df_decycle['decycle_hp2'] = HP2
-        # df_decycle['close'] = close
-        return Decycle
+        return HP2 - HP1
 
     @staticmethod
     def Decycler(data, cutoff = 60) :
@@ -469,24 +459,22 @@ class TrendIndicators():
         for i in range(len(zma)):
             if i < period - 1:
                 continue
-            else:
+            gain = -gain_limit
+            while gain < gain_limit:
+                gain += 0.1
+                zma[i] = a * (ema[i] + gain * (data[i] - zma[i - 1])) + (1 - a) * zma[i - 1]
+                new_error = data[i] - zma[i]
+                if np.abs(error) < new_error:
+                    error = np.abs(new_error)
+                    best_gain = gain
 
-                gain = -gain_limit
-                while gain < gain_limit:
-                    gain += 0.1
-                    zma[i] = a * (ema[i] + gain * (data[i] - zma[i - 1])) + (1 - a) * zma[i - 1]
-                    new_error = data[i] - zma[i]
-                    if np.abs(error) < new_error:
-                        error = np.abs(new_error)
-                        best_gain = gain
-
-                zma[i] = a * (ema[i] + best_gain * (data[i] - zma[i - 1])) + (1 - a) * zma[i - 1]
+            zma[i] = a * (ema[i] + best_gain * (data[i] - zma[i - 1])) + (1 - a) * zma[i - 1]
 
         # df_zma = pd.DataFrame(data=zma, index=df.index, columns=['zma_{i}'.format(i=period)])
         return zma
 
     @staticmethod
-    def ALMA(data, period=100) :
+    def ALMA(data, period=100):
         '''
         ALMA - Arnaud Legoux Moving Average,
         http://www.financial-hacker.com/trend-delusion-or-reality/
@@ -500,12 +488,11 @@ class TrendIndicators():
         for i in range(len(data)):
             if i < period - 1:
                 continue
-            else:
-                for j in range(period):
-                    w = np.exp(-(j-m)*(j-m)/(2*s*s))
-                    alma[i] += data[i - period + j] * w
-                    w_sum[i] += w
-                alma[i] = alma[i] / w_sum[i]
+            for j in range(period):
+                w = np.exp(-(j-m)*(j-m)/(2*s*s))
+                alma[i] += data[i - period + j] * w
+                w_sum[i] += w
+            alma[i] = alma[i] / w_sum[i]
 
         # df_alma = pd.DataFrame(data=alma, index=df.index, columns=['alma_{i}'.format(i=period)])
         return alma

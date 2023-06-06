@@ -48,17 +48,13 @@ def Sharpe(ret, annualized_factor = 365) :
 
 # In[181]:
 
-def MDD(ret, N) :
+def MDD(ret, N):
     nav = (1+ret).cumprod();
     high_wm = nav * 0 #high water mark
 
 
-    for i in range(len(ret)) :
-        if i == 0:
-            high_wm[i] = nav[i]
-        else:
-            high_wm[i] = nav[i] if nav[i] > high_wm[i-1] else high_wm[i-1]
-
+    for i in range(len(ret)):
+        high_wm[i] = nav[i] if i == 0 else max(nav[i], high_wm[i-1])
     dd = nav - high_wm ## drawdown curves
 
     ### determine the numbers of the drawdown periods, and their start/end index
@@ -90,26 +86,25 @@ def MDD(ret, N) :
     ### top N largest drawdown
     max_dd_size = []
     max_dd_duration = []
-    for l in range(N) :
+    for _ in range(N):
         max_dd = min(dd_size)
         index = dd_size.index(max_dd)
 
         max_dd_size.append(dd_size.pop(index))
         max_dd_duration.append(dd_duration.pop(index))
-        
+
     ### output
     return max_dd_size, max_dd_duration
 
  
 ### length_adjusted_MDD annualize MDD with their average length.
 ### the formula is : Average_Max_DD / Average_DD_Duration * Annulized_factor (365 by default, if days are using)
-def length_adjusted_MDD(ret, N = 5, annualized_factor = 365) :
+def length_adjusted_MDD(ret, N = 5, annualized_factor = 365):
     max_dd_size, max_dd_duration = MDD(ret, N);
     avg_mdd = np.mean(max_dd_size)
     avg_mdd_duration = np.mean(max_dd_duration)
-    
-    la_MDD = avg_mdd / avg_mdd_duration * annualized_factor
-    return la_MDD
+
+    return avg_mdd / avg_mdd_duration * annualized_factor
     
 
 
@@ -120,7 +115,6 @@ def RRR(ret, N = 5, annualized_factor = 365):
     rar = rar * annualized_factor
 
     la_mdd = length_adjusted_MDD(ret, N, annualized_factor)
-    rrr = rar / abs(la_mdd)
-    return rrr
+    return rar / abs(la_mdd)
 
 
