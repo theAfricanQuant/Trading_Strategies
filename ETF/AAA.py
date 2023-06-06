@@ -27,10 +27,9 @@ class AAA:
     def handle_data(self, context, data) :
         pass
 
-    def run_trading(self) :
+    def run_trading(self):
         algo = TradingAlgorithm(initialize=self.initialize, handle_data=self.handle_data)
-        results = algo.run(self.data)
-        return results
+        return algo.run(self.data)
 
 
 class Portfolio1(AAA):
@@ -346,10 +345,7 @@ class Momentum(AAA) :
 
         # Trading
         count = np.asarray(sig.sum(axis=1))
-        if count == 0:
-            weights = sig * 0.0
-        else :
-            weights = sig * 1.0 / count
+        weights = sig * 0.0 if count == 0 else sig * 1.0 / count
         weights = np.asarray(weights.fillna(0))
         stocks = np.asarray(sig.columns)
 
@@ -392,7 +388,7 @@ class Momentum_Sector_Rotation(AAA) :
         context.trade_days = 0
         #context.gold = symbol('GLD')
 
-    def top_rets(self, tickers, win) :
+    def top_rets(self, tickers, win):
         hist = history(bar_count = 241, frequency='1d', field='price')
 
         ret = ((hist/hist.shift(win)) - 1).tail(1)
@@ -400,12 +396,7 @@ class Momentum_Sector_Rotation(AAA) :
         max_ret = float(ret.max(axis=1))
         spy_ret = float(ret[symbol(self.ticker_spy)])
 
-        lst = {}
-        lst['mean'] = []
-        lst['spy'] = []
-        lst['zero'] = []
-        lst['max'] = []
-
+        lst = {'mean': [], 'spy': [], 'zero': [], 'max': []}
         for ticker in tickers :
             ticker_ret = float(ret[ticker])
             if ticker_ret > mean_ret :

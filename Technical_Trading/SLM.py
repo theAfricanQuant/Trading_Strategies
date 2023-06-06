@@ -12,27 +12,21 @@ from pyfolio.timeseries import sharpe_ratio
 import math
 
 
-def get_patterns(n, ret) :
+def get_patterns(n, ret):
     signals = pd.DataFrame()
     scores = [];
-    for i in range(n) :
+    for i in range(n):
         signals[i] = (ret.shift(n-i-1) > 0) * 1
-        if (i == 0) :
-            scores = signals[i];
-        else :
-            scores = scores + signals[i] * pow(2, i);
+        scores = signals[i] if (i == 0) else scores + signals[i] * pow(2, i)
     return scores;
 
-def get_patterns1(n, ret) :
+def get_patterns1(n, ret):
     signals = pd.DataFrame();
     scores = [];
-    for i in range(0, n) :
+    for i in range(0, n):
         signals[i] = 2*(ret.shift(n - i-1) > 0.0075)
         signals[i] = signals[i] + 1*((ret.shift(n - i - 1) > -0.0075) & (signals[i] != 2))
-        if (i == 0) :
-            scores = signals[i];
-        else :
-            scores = scores + signals[i] * pow(3, i);
+        scores = signals[i] if (i == 0) else scores + signals[i] * pow(3, i)
     return scores;
 
 ### function: get patterns, and calculate the historical insample returns, sharpe ratios and 
@@ -62,30 +56,26 @@ def pattern_characters(n, ret, annualized_factor=365) :
  
 
 ### function: 3 types of out-of-sample test for the pattern trading
-def strategy_oos_test(n, ret, type = 1, n_lookback = 0, n_sliding = 0) :
+def strategy_oos_test(n, ret, type = 1, n_lookback = 0, n_sliding = 0):
     n_total = len(ret)
     ret_oos = pd.DataFrame();
-    
+
     ## type = 1: single train set defined by n_lookback, single test set from n_lookback:n_total
-    if type == 1 or type == 0:
-        ret_train = ret[0:(n_lookback - 1)]
+    if type in [1, 0]:
+        ret_train = ret[:n_lookback - 1]
         ret_test = ret[n_lookback::]
 
         prob_list = pattern_characters(n, ret_train)
-           
+
         ret_strategy1 = optimize_returns(n, ret_test, prob_list)
         ret_oos['t1'] = ret_strategy1
-        #(1+ret_strategy).cumprod().plot()
-    ## type 2: sliding insample window, defined by n_lookback and sliding forward. The test set window is defined as n_      
-    if type == 2 or type == 0:
+    ## type 2: sliding insample window, defined by n_lookback and sliding forward. The test set window is defined as n_
+    if type in [2, 0]:
         k = n_lookback
         ret_strategy2 = pd.Series()
-        while k < n_total-1 :
-            ret_train = ret[0:(k - 1)]
-            if (k+n_sliding) <= n_total :
-                k2 = k + n_sliding - 1
-            else :
-                k2 = n_total - 1
+        while k < n_total-1:
+            ret_train = ret[:k - 1]
+            k2 = k + n_sliding - 1 if (k+n_sliding) <= n_total else n_total - 1
             ret_test = ret[k:k2]
 
             ## trading
@@ -93,17 +83,14 @@ def strategy_oos_test(n, ret, type = 1, n_lookback = 0, n_sliding = 0) :
             ret_strategy2 = ret_strategy2.append(optimize_returns(n, ret_test, prob_list))
             k = k2;
         ret_oos['t2'] = ret_strategy2
-        #(1+ret_strategy).cumprod().plot()
-    ## type 3: sliding insample window, defined by n_lookback and sliding forward. The test set window is defined as n_      
-    if type == 3 or type == 0:
+            #(1+ret_strategy).cumprod().plot()
+    ## type 3: sliding insample window, defined by n_lookback and sliding forward. The test set window is defined as n_
+    if type in [3, 0]:
         k = n_lookback
         ret_strategy3 = pd.Series()
-        while k < n_total-1 :
+        while k < n_total-1:
             ret_train = ret[(k-n_lookback):(k - 1)]
-            if (k+n_sliding) <= n_total :
-                k2 = k + n_sliding - 1
-            else :
-                k2 = n_total - 1
+            k2 = k + n_sliding - 1 if (k+n_sliding) <= n_total else n_total - 1
             ret_test = ret[k:k2]
 
             ## trading
@@ -111,8 +98,8 @@ def strategy_oos_test(n, ret, type = 1, n_lookback = 0, n_sliding = 0) :
             ret_strategy3 = ret_strategy3.append(optimize_returns(n, ret_test, prob_list))
             k = k2;
         ret_oos['t3'] = ret_strategy3
-        #(1+ret_strategy).cumprod().plot()
-        
+            #(1+ret_strategy).cumprod().plot()
+
     return ret_oos;
 
 
@@ -140,13 +127,13 @@ def get_data() :
 
 
 ### function: determine the best trading strategy, based on the pattern,and its historical risk measure
-def optimize_returns(n, ret, prob_list) :
+def optimize_returns(n, ret, prob_list):
     n_total = len(ret)
     patterns = get_patterns(n, ret);
     ret_patterns = pd.DataFrame(patterns.shift(1), columns=['patterns']).join(ret)
-    
+
     signal = pd.Series(0.0, index=ret_patterns.index)
-    for i in range(n_total) :
+    for i in range(n_total):
         pattern = ret_patterns['patterns'].ix[i]
         if numpy.isnan(pattern):
             sharpe = 0;
@@ -156,7 +143,7 @@ def optimize_returns(n, ret, prob_list) :
             sharpe = prob_list['sharpes'].ix[pattern]
             win_ratio = prob_list['win_rate'].ix[pattern]
             profit_factor = prob_list['profit_factor'].ix[pattern]
-            
+
         #### implementing Kelly Ratio
         #if (win_ratio > 0.5) :
         #    R = win_ratio - (1-win_ratio) / profit_factor
@@ -168,19 +155,11 @@ def optimize_returns(n, ret, prob_list) :
 #             signal[i] = R
 #         #else :
 #         #    signal[i] = R
-        
-        
-        
-        if ( sharpe > 0.5) :
-             signal[i] = 1
-        #elif (sharpe < -1 and win_ratio < 0.5) :
-        #    signal[i] = -1
-        else:
-             signal[i] = 0
-    #print(ret_patterns.ix[:, 1])      
-    ret_strategy = ret_patterns.ix[:, 1] * pd.Series(signal, index=ret_patterns.index)
-    
-    return ret_strategy
+
+
+
+        signal[i] = 1 if ( sharpe > 0.5) else 0
+    return ret_patterns.ix[:, 1] * pd.Series(signal, index=ret_patterns.index)
 
 def test(n = 4, n_lookback=1000, n_sliding = 500, type = 1):
     data = get_data()
@@ -201,8 +180,10 @@ fig = plt.plot((1+ret_oos).cumprod())
 plt.show()
 #(1+ret_oos).cumprod().plot()
 
-winrate = {}
-winrate[1] = float(numpy.sum(ret_oos.t1[ret_oos.t1 != 0] >0)) / len(ret_oos.t1[ret_oos.t1 != 0]) 
+winrate = {
+    1: float(numpy.sum(ret_oos.t1[ret_oos.t1 != 0] > 0))
+    / len(ret_oos.t1[ret_oos.t1 != 0])
+}
 winrate[2] = float(numpy.sum(ret_oos.t2[ret_oos.t2 != 0] > 0)) / len(ret_oos.t2[ret_oos.t2 != 0])
 winrate[3] = float(numpy.sum(ret_oos.t3[ret_oos.t3 != 0] > 0))  / len(ret_oos.t3[ret_oos.t3 != 0])
 #print(winrate)

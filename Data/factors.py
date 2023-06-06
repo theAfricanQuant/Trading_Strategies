@@ -32,18 +32,12 @@ class Client:
             i = path.find('&', start)
             if (i >= 0):
                 for j in range(start, i):
-                    if (path[j] > '~'):
-                        re += urllib.quote(path[j])
-                    else:
-                        re += path[j]
+                    re += urllib.quote(path[j]) if (path[j] > '~') else path[j]
                 re += '&'
                 start = i + 1
             else:
                 for j in range(start, n):
-                    if (path[j] > '~'):
-                        re += urllib.quote(path[j])
-                    else:
-                        re += path[j]
+                    re += urllib.quote(path[j]) if (path[j] > '~') else path[j]
                 start = n
             i = path.find('=', start)
         return re
@@ -470,8 +464,7 @@ import matplotlib
 if __name__ == '__main__':
     ff = FactorFactory()
 
-    params = {}
-    params['ticker'] = '000905' # zhongzheng 500 ETF
+    params = {'ticker': '000905'}
     # params['beginDate'] = datetime.strptime('20080101', '%Y%m%d')
     # params['endDate'] = datetime.today()
     pd_etf = ff.getMarketIndex(params)

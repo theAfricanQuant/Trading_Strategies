@@ -173,10 +173,7 @@ def get_feature(data, feature_type):
         return get_feature4(data)
     if feature_type == 5:
         return get_feature5(data)
-    if feature_type == 6:
-        return get_feature6(data)
-    else :
-        return []
+    return get_feature6(data) if feature_type == 6 else []
         
 
  
@@ -186,18 +183,18 @@ def risk_measure(ret, group, nr_group):
     nr_winning = []
     nr_losing = []
     pct_winning = []
-    
+
     total_trade = []
     total_winning = []
     total_losing = []
     avg_trade = []
     avg_winning = []
     avg_losing = []
-    
+
     max_dd = []
     sharpe = []
     sortino = []
-    
+
     for i in range(nr_group) :
         ret_group = ret * ((group == i)*1).shift(1)
         ### numbers of trading 
@@ -205,7 +202,7 @@ def risk_measure(ret, group, nr_group):
         nr_winning.append(sum((ret_group > 0) * 1))
         nr_losing.append(nr_trade[i] - nr_winning[i])
         pct_winning.append(float(nr_winning[i]) / nr_trade[i])
-        
+
         ### avg trading profit
         total_winning.append(sum(ret_group[ret_group > 0]))
         avg_winning.append(total_winning[i] / nr_winning[i])
@@ -213,30 +210,27 @@ def risk_measure(ret, group, nr_group):
         avg_losing.append(total_losing[i] / nr_losing[i])
         total_trade.append(sum(ret_group.dropna()))
         avg_trade.append(total_trade[i] / nr_trade[i])
-         
+
         ### risk measure
         max_dd.append(pf.timeseries.max_drawdown(ret_group))
         sharpe.append(pf.timeseries.sharpe_ratio(ret_group))
         sortino.append(pf.timeseries.sortino_ratio(ret_group))
 
-    stats = {}
-    stats['nr_trade'] = nr_trade
-    stats['nr_winning'] = nr_winning
-    stats['nr_losing'] = nr_losing
-    stats['pct_winning'] = pct_winning
-    
-    stats['total_winning'] = total_winning
-    stats['total_losing'] = total_losing
-    stats['total_trade'] = total_trade
-    
-    stats['avg_winning'] = avg_winning
-    stats['avg_losing'] = avg_losing
-    stats['avg_trade'] = avg_trade
-    
-    stats['max_dd'] = max_dd
-    stats['sharpe'] = sharpe
-    stats['sortino'] = sortino
-    return stats
+    return {
+        'nr_trade': nr_trade,
+        'nr_winning': nr_winning,
+        'nr_losing': nr_losing,
+        'pct_winning': pct_winning,
+        'total_winning': total_winning,
+        'total_losing': total_losing,
+        'total_trade': total_trade,
+        'avg_winning': avg_winning,
+        'avg_losing': avg_losing,
+        'avg_trade': avg_trade,
+        'max_dd': max_dd,
+        'sharpe': sharpe,
+        'sortino': sortino,
+    }
 
 
     
@@ -307,12 +301,8 @@ for i in range(5):
     print(i)
     ret0 = strategy_full_test(data, grouping_nr=10, grouping_type='kmeans', grouping_feature_type=i+2, 
                                   n_lookback=1000, n_sliding=250,  oos_type = 'rolling')
-    ret = pd.DataFrame(ret0, index=ret0.index, columns=['feature '+str(i)])
-    if i == 0:
-        str_oos_ret = ret
-    else :
-        str_oos_ret = str_oos_ret.join(ret)
-        
+    ret = pd.DataFrame(ret0, index=ret0.index, columns=[f'feature {str(i)}'])
+    str_oos_ret = ret if i == 0 else str_oos_ret.join(ret)
 import matplotlib.pyplot as plt
 #plt.plot((1+str_is_ret).cumprod())
 plt.plot((1+str_oos_ret).cumprod())

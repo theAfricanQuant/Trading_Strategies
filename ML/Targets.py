@@ -39,13 +39,8 @@ def log_return_std_by_atr(df, atrLen = 30) :
 def next_day_atr_return_distance(df, win=250):
     delta_o = np.array(df['open'].shift(-2) - df['open'].shift(-1))
     atr = ta.ATR(df['high'].values, df['low'].values, df['close'].values, win)
-    if win == 1:
-        v = delta_o
-    else :
-        v = delta_o / atr
-
-    ndard = pd.DataFrame(data=v, index=df.index, columns=['ndard'])
-    return ndard
+    v = delta_o if win == 1 else delta_o / atr
+    return pd.DataFrame(data=v, index=df.index, columns=['ndard'])
 
 def subsequent_day_atr_return_distance(df, seq, win=250) :
     n = next_day_atr_return_distance(df, win)

@@ -7,8 +7,7 @@ def gp_sub(a, b): return a-b
 def gp_mul(a, b): return a*b
 
 def qp_div(a, b): 
-    if b==0: return 0
-    else: return a/b
+    return 0 if b==0 else a/b
     
 def qp_sqrt(a): return math.sqrt(abs(a))
 def qp_exp(a): return math.exp(a)
